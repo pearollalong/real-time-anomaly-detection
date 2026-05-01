@@ -1,15 +1,21 @@
 from data.generator import generate_time_series, inject_anomalies
-import matplotlib.pyplot as plt
+from features.rolling_stats import rolling_mean, rolling_std, z_score
+from visualization.plot import plot_series
+from features.rolling_stats import detect_anomalies
+
+WINDOW = 20
 
 data = generate_time_series()
-data_with_anomaly, anomaly_indices = inject_anomalies(data)
+data, true_anomalies = inject_anomalies(data)
 
-for idx in anomaly_indices:
-    print(f"Anomaly at index {idx}: {data_with_anomaly[idx]}")
-    print(f"Original value: {data[idx]}")
-    print("--------------------------------")
+means = rolling_mean(data, WINDOW)
+stds = rolling_std(data, WINDOW)
 
-plt.plot(data, label="Original")
-plt.plot(data_with_anomaly, label="With Anomaly")
-plt.legend()
-plt.show()
+z_scores = z_score(data, means, stds)
+
+predicted_anomalies = detect_anomalies(z_scores)
+
+print("True anomalies:", true_anomalies)
+print("Predicted anomalies:", predicted_anomalies)
+
+plot_series(data, true_anomalies, predicted_anomalies)
